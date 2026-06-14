@@ -1,0 +1,61 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew assembleDebug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-debug
+        path: app/build/outputs/apk/debug/app-debug.apk
+
+    - name: Create Release
+      if: success()
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v1.0.0-${{ github.run_number }}
+        release_name: HS LEWIS FOG v1.0.0-${{ github.run_number }}
+        body: |
+          ## HS LEWIS FOG - App Android
+          
+          **Funcionalidades:**
+          - HS PRECISION - Injeção de código funcional
+          - HS PESCOÇO - Injeção de código funcional
+          - Autenticação com senha LEWISFOV
+          - Integração com backend
+          
+          **Como Instalar:**
+          1. Baixe o arquivo `app-debug.apk`
+          2. Abra no seu Android
+          3. Clique em "Instalar"
+          4. Use a senha: LEWISFOV
+          
+          **Versão:** ${{ github.run_number }}
+          **Data:** ${{ github.event.head_commit.timestamp }}
+        draft: false
+        prerelease: false
